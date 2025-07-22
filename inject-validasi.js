@@ -261,6 +261,69 @@ function runSemuaAktivitasScript() {
   klikBerikutnya();
 }
 
+function getBawahan() {
+  const result = [];
+  window.queueValidasiBawahan = [];
+  const parent = document.querySelector('#wraper > div > div.card_wrapper');
+  if (!parent) {
+    console.warn('Parent card_wrapper not found');
+    return result;
+  }
+  const cards = parent.querySelectorAll('.card.bg-white.box-shadow-panel.wrapper-md');
+  cards.forEach(card => {
+    const nama = (card.querySelector('p.text-orange.text14') || {}).textContent?.trim() || '';
+    const nipText = (card.querySelector('p.text-light-grey.text12') || {}).textContent || '';
+    const nipMatch = nipText.match(/NIP:\s*(\d+)/);
+    const nip = nipMatch ? nipMatch[1] : '';
+    const jabatan = (card.querySelector('p.text-success.text14') || {}).textContent?.trim() || '';
+    const allValidated = !!card.innerText.match(/Semua Aktivitas Sudah Divalidasi/);
+    const obj = {
+      nama: nama,
+      nip: nip,
+      jabatan: jabatan,
+      all_validated: allValidated
+    };
+    result.push(obj);
+    if (!allValidated) {
+      window.queueValidasiBawahan.push(obj);
+    }
+  });
+  // Add menu if needed
+  const ul = document.querySelector('#header > div.collapse.pos-rlt.navbar-collapse.bg-info > ul');
+  if (ul && !ul.querySelector('#prosesBawahanMenu')) {
+    const li = document.createElement('li');
+    li.className = 'dropdown';
+    li.id = 'prosesBawahanMenu';
+    const a = document.createElement('a');
+    a.href = '#';
+    a.className = 'dropdown-toggle';
+    a.style.backgroundColor = '#1976d2';
+    a.style.color = '#fff';
+    a.style.fontWeight = 'bold';
+    a.style.borderRadius = '4px';
+    a.style.margin = '2px 0';
+    a.innerHTML = '🚀 Validasi Otomatis <span class="badge badge-sm m-l-sm bg-danger pull-right-xs" id="bawahanBadge">' + window.queueValidasiBawahan.length + '</span>';
+    a.onclick = function(e) {
+      e.preventDefault();
+      if (window.queueValidasiBawahan.length > 0) {
+        console.log('queueValidasiBawahan:', window.queueValidasiBawahan);
+        notify("Info",window.queueValidasiBawahan.length + ' pegawai belum divalidasi. Lihat console untuk detail.');
+        notify("Info",'Fitur ini belum diimplementasi, silahkan klik tombol "Jalankan Script" untuk menjalankan validasi secara manual.');
+      } else {
+        notify("Info",'Saat ini tidak ada pegawai yang perlu divalidasi.', "error");
+      }
+    };
+    li.appendChild(a);
+    ul.insertBefore(li, ul.firstChild);
+  } else if (ul) {
+    // update badge if already present
+    const badge = ul.querySelector('#bawahanBadge');
+    if (badge) badge.textContent = window.queueValidasiBawahan.length;
+  }
+  console.log(result);
+  return result;
+}
+
 // Add the 'Jalankan Script' and 'Jalankan Semua Aktivitas' buttons to the modal-content if not already present
 (function addJalankanScriptButtons() {
   const modalContent = document.querySelector('#modal-validasi-aktivitas > div > div');
@@ -326,3 +389,6 @@ function runSemuaAktivitasScript() {
     modalContent.insertBefore(jalankanSemuaBtn, modalContent.firstChild.nextSibling.nextSibling);
   }
 })();
+
+// Call getBawahan on page load
+getBawahan();
