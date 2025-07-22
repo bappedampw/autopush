@@ -16,6 +16,32 @@
   aDiv.insertBefore(notice, aDiv.firstChild);
 })();
 
+// Lock/unlock modal close during progress
+function lockModal() {
+  var closeBtn = document.querySelector('#modal-validasi-aktivitas .close, #modal-validasi-aktivitas [data-dismiss="modal"]');
+  if (closeBtn) closeBtn.disabled = true;
+  var modal = document.getElementById('modal-validasi-aktivitas');
+  if (modal) {
+    modal.setAttribute('data-locked', 'true');
+    modal.addEventListener('click', modalLockHandler, true);
+  }
+}
+function modalLockHandler(e) {
+  if (e.target.classList.contains('modal') || e.target.classList.contains('modal-backdrop')) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+}
+function unlockModal() {
+  var closeBtn = document.querySelector('#modal-validasi-aktivitas .close, #modal-validasi-aktivitas [data-dismiss="modal"]');
+  if (closeBtn) closeBtn.disabled = false;
+  var modal = document.getElementById('modal-validasi-aktivitas');
+  if (modal) {
+    modal.removeAttribute('data-locked');
+    modal.removeEventListener('click', modalLockHandler, true);
+  }
+}
+
 // Function to run the main script logic
 function runValidasiScript() {
   const buttons = document.querySelectorAll(
@@ -110,6 +136,7 @@ const refUrl = getUrl('/validasi');
 
 // Function to run all aktivitas automatically
 function runSemuaAktivitasScript() {
+  lockModal(); // Lock modal at start
   const buttons = document.querySelectorAll(
     '#modal-validasi-aktivitas table button.btn.btn-success.btn-sm'
   );
@@ -133,6 +160,7 @@ function runSemuaAktivitasScript() {
   const nip = prompt('Masukkan NIP:');
   if (!nip || nip.trim() === '') {
     alert('NIP wajib diisi! Proses dibatalkan.');
+    unlockModal();
     return;
   }
   let detik = prompt('Masukkan jeda antar klik (detik, kosongkan untuk random 1-10 detik):', '');
@@ -150,6 +178,7 @@ function runSemuaAktivitasScript() {
   function klikBerikutnya() {
     if (idx >= filteredButtons.length) {
       alert('Semua aktivitas telah dijalankan!');
+      unlockModal(); // Unlock modal after all done
       return;
     }
     const btn = filteredButtons[idx];
